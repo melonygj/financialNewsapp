@@ -35,6 +35,7 @@ fun CategoryFilter(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryFilterChip(
     category: NewsCategory,
