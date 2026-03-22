@@ -1,0 +1,37 @@
+R_DEF: Internal format may change without notice
+local
+color accent
+color background
+color black
+color card_background
+color primary
+color primary_dark
+color purple_200
+color purple_500
+color purple_700
+color teal_200
+color teal_700
+color text_primary
+color text_secondary
+color white
+mipmap ic_launcher
+mipmap ic_launcher_round
+string all
+string app_name
+string business
+string economy
+string error_loading
+string loading
+string markets
+string no_data
+string published_at
+string read_more
+string search_placeholder
+string source
+string technology
+string title_categories
+string title_favorites
+string title_home
+style Theme.FinanceNewsApp
+xml backup_rules
+xml data_extraction_rules

@@ -1,0 +1,86 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+    
+    - name: Make gradlew executable
+      run: |
+        mkdir -p gradle/wrapper
+        # Create minimal gradlew
+        cat > gradlew << 'SCRIPT'
+        #!/bin/bash
+        if [ -f ./gradlew ]; then
+          exec bash ./gradlew "$@"
+        else
+          # Download gradle wrapper if not exists
+          gradle wrapper --gradle-version 8.4
+          exec bash ./gradlew "$@"
+        fi
+        SCRIPT
+        chmod +x gradlew
+    
+    - name: Build Debug APK
+      run: |
+        # Use gradle directly if wrapper not available
+        gradle assembleDebug || ./gradlew assembleDebug
+    
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: FinanceNewsApp-debug
+        path: app/build/outputs/apk/debug/app-debug.apk
+    
+    - name: Create Release
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release]'))
+      uses: softprops/action-gh-release@v1
+      with:
+        files: app/build/outputs/apk/debug/app-debug.apk
+        tag_name: v1.0.${{ github.run_number }}
+        name: FinanceNewsApp v1.0.${{ github.run_number }}
+        body: |
+          ## 金融资讯 App
+          
+          ### 功能
+          - 📰 查看最近一周金融新闻
+          - 🔍 支持分类筛选（商业/科技/市场/经济）
+          - 🔎 搜索功能
+          
+          ### 安装
+          下载 `app-debug.apk` 并安装到 Android 设备
+          
+          ### 构建信息
+          - 构建时间: ${{ github.event.head_commit.timestamp }}
+          - 提交: ${{ github.sha }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
